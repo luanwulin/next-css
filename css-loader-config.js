@@ -1,4 +1,4 @@
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const ExtractCssChunks = require('extract-css-chunks-webpack-plugin')
 const findUp = require('find-up')
 const NextCSSPlugin = require('./plugin')
 
@@ -23,7 +23,7 @@ module.exports = (
   }
 
   if (!isServer) {
-    const { commons } = config.optimization.splitChunks.cacheGroups
+    const { commons } = config.optimization.splitChunks.cacheGroups,
     config.optimization.splitChunks.cacheGroups.styles = {
       name: 'styles',
       test: new RegExp(`\\.+(${[...fileExtensions].join('|')})$`),
@@ -35,7 +35,7 @@ module.exports = (
 
   if (!isServer && !extractCssInitialized) {
     config.plugins.push(
-      new MiniCssExtractPlugin({
+      new ExtractCssChunks({
         // Options similar to the same options in webpackOptions.output
         // both options are optional
         filename: dev
@@ -43,7 +43,8 @@ module.exports = (
           : 'static/css/[contenthash:8].css',
         chunkFilename: dev
           ? 'static/css/[name].chunk.css'
-          : 'static/css/[contenthash:8].chunk.css'
+          : 'static/css/[contenthash:8].chunk.css',
+        hot: dev
       })
     )
     config.plugins.push(new NextCSSPlugin())
@@ -96,8 +97,7 @@ module.exports = (
   }
 
   return [
-    !isServer && dev && 'extracted-loader',
-    !isServer && MiniCssExtractPlugin.loader,
+    !isServer && ExtractCssChunks.loader,
     cssLoader,
     postcssLoader,
     ...loaders
