@@ -28,8 +28,7 @@ module.exports = (
         // both options are optional
         filename: dev
           ? 'static/css/[name].css'
-          : 'static/css/[contenthash:8].css',
-        hot: dev
+          : 'static/css/[contenthash:8].css'
       })
     )
     extractCssInitialized = true
