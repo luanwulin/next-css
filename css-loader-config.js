@@ -29,9 +29,6 @@ module.exports = (
         filename: dev
           ? 'static/css/[name].css'
           : 'static/css/[contenthash:8].css',
-        chunkFilename: dev
-          ? 'static/css/[name].chunk.css'
-          : 'static/css/[contenthash:8].chunk.css',
         hot: dev
       })
     )
