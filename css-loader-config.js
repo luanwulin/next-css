@@ -1,4 +1,4 @@
-const ExtractCssChunks = require('extract-css-chunks-webpack-plugin')
+const ExtractCssChunks = require('extract-text-webpack-plugin')
 const findUp = require('find-up')
 
 const fileExtensions = new Set()
@@ -81,7 +81,7 @@ module.exports = (
   }
 
   return [
-    !isServer && ExtractCssChunks.loader,
+    !isServer && dev && 'extracted-loader',
     cssLoader,
     postcssLoader,
     ...loaders
