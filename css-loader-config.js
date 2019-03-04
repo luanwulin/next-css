@@ -1,6 +1,5 @@
 const ExtractCssChunks = require('extract-css-chunks-webpack-plugin')
 const findUp = require('find-up')
-const NextCSSPlugin = require('./plugin')
 
 const fileExtensions = new Set()
 let extractCssInitialized = false
@@ -22,17 +21,6 @@ module.exports = (
     fileExtensions.add(extension)
   }
 
-  if (!isServer) {
-    const { commons } = config.optimization.splitChunks.cacheGroups
-    config.optimization.splitChunks.cacheGroups.styles = {
-      name: 'styles',
-      test: new RegExp(`\\.+(${[...fileExtensions].join('|')})$`),
-      chunks: 'all',
-      enforce: true,
-      minChunks: commons && commons.minChunks
-    }
-  }
-
   if (!isServer && !extractCssInitialized) {
     config.plugins.push(
       new ExtractCssChunks({
@@ -47,7 +35,6 @@ module.exports = (
         hot: dev
       })
     )
-    config.plugins.push(new NextCSSPlugin())
     extractCssInitialized = true
   }
 
