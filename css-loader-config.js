@@ -1,4 +1,4 @@
-const ExtractCssChunks = require('extract-text-webpack-plugin')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const findUp = require('find-up')
 
 const fileExtensions = new Set()
@@ -23,14 +23,14 @@ module.exports = (
 
   if (!isServer && !extractCssInitialized) {
     config.plugins.push(
-      // new ExtractCssChunks({
+      // new ExtractTextPlugin({
       //   // Options similar to the same options in webpackOptions.output
       //   // both options are optional
       //   filename: dev
       //     ? 'static/css/[name].css'
       //     : 'static/css/[contenthash:8].css'
       // }),
-      new ExtractCssChunks({
+      new ExtractTextPlugin({
         filename: (getPath) => {
           console.log(2222);
           return getPath('assets/[name].css').replace('css/js', 'assets').replace('bundles/pages', '').replace('.js', '');
@@ -86,10 +86,13 @@ module.exports = (
     return [cssLoader, postcssLoader, ...loaders].filter(Boolean)
   }
 
-  return [
-    !isServer && dev && 'extracted-loader',
-    cssLoader,
-    postcssLoader,
-    ...loaders
-  ].filter(Boolean)
+  const Loaders = ExtractTextPlugin.extract({
+    use: [
+      cssLoader,
+      postcssLoader,
+      ...loaders
+    ].filter(Boolean)
+  })
+
+  return (!isServer && dev) ? ['extracted-loader'].concat(Loaders) : Loaders;
 }
