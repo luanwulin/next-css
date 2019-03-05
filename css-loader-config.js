@@ -13,7 +13,8 @@ module.exports = (
     dev,
     isServer,
     postcssLoaderOptions = {},
-    loaders = []
+    loaders = [],
+    extractFilename,
   }
 ) => {
   // We have to keep a list of extensions for the splitchunk config
@@ -21,20 +22,16 @@ module.exports = (
     fileExtensions.add(extension)
   }
 
+  if(!extractFilename){
+    extractFilename = dev
+        ? 'static/css/[name].css'
+        : 'static/css/[contenthash:8].css'
+  }
+
   if (!isServer && !extractCssInitialized) {
     config.plugins.push(
-      // new ExtractTextPlugin({
-      //   // Options similar to the same options in webpackOptions.output
-      //   // both options are optional
-      //   filename: dev
-      //     ? 'static/css/[name].css'
-      //     : 'static/css/[contenthash:8].css'
-      // }),
       new ExtractTextPlugin({
-        filename: (getPath) => {
-          console.log(2222);
-          return getPath('assets/[name].css').replace('css/js', 'assets').replace('bundles/pages', '').replace('.js', '');
-        },
+        filename: extractFilename,
         allChunks: true
       })
     )
