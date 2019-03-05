@@ -23,12 +23,19 @@ module.exports = (
 
   if (!isServer && !extractCssInitialized) {
     config.plugins.push(
+      // new ExtractCssChunks({
+      //   // Options similar to the same options in webpackOptions.output
+      //   // both options are optional
+      //   filename: dev
+      //     ? 'static/css/[name].css'
+      //     : 'static/css/[contenthash:8].css'
+      // }),
       new ExtractCssChunks({
-        // Options similar to the same options in webpackOptions.output
-        // both options are optional
-        filename: dev
-          ? 'static/css/[name].css'
-          : 'static/css/[contenthash:8].css'
+        filename: (getPath) => {
+          console.log(2222);
+          return getPath('assets/[name].css').replace('css/js', 'assets').replace('bundles/pages', '').replace('.js', '');
+        },
+        allChunks: true
       })
     )
     extractCssInitialized = true
