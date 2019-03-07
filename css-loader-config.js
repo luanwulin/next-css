@@ -1,5 +1,7 @@
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const ExtractCssChunks = require('extract-css-chunks-webpack-plugin')
+const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin')
 const findUp = require('find-up')
+const NextCSSPlugin = require('./plugin')
 
 const fileExtensions = new Set()
 let extractCssInitialized = false
@@ -13,8 +15,7 @@ module.exports = (
     dev,
     isServer,
     postcssLoaderOptions = {},
-    loaders = [],
-    extractFilename,
+    loaders = []
   }
 ) => {
   // We have to keep a list of extensions for the splitchunk config
@@ -22,20 +23,45 @@ module.exports = (
     fileExtensions.add(extension)
   }
 
-  if(!extractFilename){
-    extractFilename = dev
-        ? 'static/css/[name].css'
-        : 'static/css/[contenthash:8].css'
+  if (!isServer) {
+    config.optimization.splitChunks.cacheGroups.styles = {
+      name: 'styles',
+      test: new RegExp(`\\.+(${[...fileExtensions].join('|')})$`),
+      chunks: 'all',
+      enforce: true
+    }
   }
 
   if (!isServer && !extractCssInitialized) {
     config.plugins.push(
-      new ExtractTextPlugin({
-        filename: extractFilename,
-        allChunks: true
+      new ExtractCssChunks({
+        // Options similar to the same options in webpackOptions.output
+        // both options are optional
+        filename: dev
+          ? 'static/chunks/[name].css'
+          : 'static/chunks/[name].[contenthash:8].css',
+        chunkFilename: dev
+          ? 'static/chunks/[name].chunk.css'
+          : 'static/chunks/[name].[contenthash:8].chunk.css',
+        hot: dev
       })
     )
+    config.plugins.push(new NextCSSPlugin())
     extractCssInitialized = true
+  }
+
+  if (!dev) {
+    if (!Array.isArray(config.optimization.minimizer)) {
+      config.optimization.minimizer = []
+    }
+
+    config.optimization.minimizer.push(
+      new OptimizeCssAssetsWebpackPlugin({
+        cssProcessorOptions: {
+          discardComments: { removeAll: true }
+        }
+      })
+    )
   }
 
   const postcssConfig = findUp.sync('postcss.config.js', {
@@ -83,13 +109,10 @@ module.exports = (
     return [cssLoader, postcssLoader, ...loaders].filter(Boolean)
   }
 
-  const Loaders = ExtractTextPlugin.extract({
-    use: [
-      cssLoader,
-      postcssLoader,
-      ...loaders
-    ].filter(Boolean)
-  })
-
-  return (!isServer && dev) ? ['extracted-loader'].concat(Loaders) : Loaders;
+  return [
+    !isServer && ExtractCssChunks.loader,
+    cssLoader,
+    postcssLoader,
+    ...loaders
+  ].filter(Boolean)
 }
