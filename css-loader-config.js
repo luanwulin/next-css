@@ -1,5 +1,4 @@
-const ExtractCssChunks = require('extract-css-chunks-webpack-plugin')
-const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const findUp = require('find-up')
 const NextCSSPlugin = require('./plugin')
 
@@ -24,44 +23,31 @@ module.exports = (
   }
 
   if (!isServer) {
+    const { commons } = config.optimization.splitChunks.cacheGroups
     config.optimization.splitChunks.cacheGroups.styles = {
       name: 'styles',
       test: new RegExp(`\\.+(${[...fileExtensions].join('|')})$`),
       chunks: 'all',
-      enforce: true
+      enforce: true,
+      minChunks: commons && commons.minChunks
     }
   }
 
   if (!isServer && !extractCssInitialized) {
     config.plugins.push(
-      new ExtractCssChunks({
+      new MiniCssExtractPlugin({
         // Options similar to the same options in webpackOptions.output
         // both options are optional
         filename: dev
-          ? 'static/chunks/[name].css'
-          : 'static/chunks/[name].[contenthash:8].css',
+          ? 'static/css/[name].css'
+          : 'static/css/[contenthash:8].css',
         chunkFilename: dev
-          ? 'static/chunks/[name].chunk.css'
-          : 'static/chunks/[name].[contenthash:8].chunk.css',
-        hot: dev
+          ? 'static/css/[name].chunk.css'
+          : 'static/css/[contenthash:8].chunk.css'
       })
     )
     config.plugins.push(new NextCSSPlugin())
     extractCssInitialized = true
-  }
-
-  if (!dev) {
-    if (!Array.isArray(config.optimization.minimizer)) {
-      config.optimization.minimizer = []
-    }
-
-    config.optimization.minimizer.push(
-      new OptimizeCssAssetsWebpackPlugin({
-        cssProcessorOptions: {
-          discardComments: { removeAll: true }
-        }
-      })
-    )
   }
 
   const postcssConfig = findUp.sync('postcss.config.js', {
@@ -110,7 +96,8 @@ module.exports = (
   }
 
   return [
-    !isServer && ExtractCssChunks.loader,
+    !isServer && dev && 'extracted-loader',
+    !isServer && MiniCssExtractPlugin.loader,
     cssLoader,
     postcssLoader,
     ...loaders
