@@ -10,13 +10,14 @@ module.exports = (nextConfig = {}) => {
       }
 
       const { dev, isServer } = options
-      const { cssModules, cssLoaderOptions, postcssLoaderOptions } = nextConfig
+      const { cssModules, cssLoaderOptions, postcssLoaderOptions, extractFilename } = nextConfig
 
       options.defaultLoaders.css = cssLoaderConfig(config, {
         extensions: ['css'],
         cssModules,
         cssLoaderOptions,
         postcssLoaderOptions,
+        extractFilename,
         dev,
         isServer
       })
